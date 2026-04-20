@@ -1,0 +1,32 @@
+{
+  "name": "front",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "axios": "^1.15.1",
+    "pinia": "^3.0.4",
+    "vue": "^3.5.32",
+    "vue-router": "^5.0.4",
+    "vuetify": "^3.12.5",
+    "@fontsource/exo-2": "^5.2.8",
+    "@date-io/dayjs": "^3.2.0",
+    "dayjs": "^1.11.20",
+    "pinia-plugin-persistedstate": "^4.7.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.2",
+    "@vitejs/plugin-vue": "^6.0.5",
+    "@mdi/js": "^7.4.47",
+    "typescript": "5.4",
+    "vite": "^8.0.4",
+    "vue-tsc": "^3.2.6",
+    "sass": "^1.99.0",
+    "sass-embedded": "^1.99.0"
+  }
+}
