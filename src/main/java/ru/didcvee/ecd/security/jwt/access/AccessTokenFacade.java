@@ -48,11 +48,11 @@ public class AccessTokenFacade implements TokenFacade {
 
     public ResponseCookie generateJwtCookie(UserDetailsImpl userPrincipal) {
         String jwt = createToken(userPrincipal);
-        return generateCookie(jwtCookie, jwt, "/rest");
+        return generateCookie(jwtCookie, jwt, "/ecd");
     }
 
     public ResponseCookie generateRefreshJwtCookie(String refreshToken) {
-        return generateCookie(jwtRefreshCookie, refreshToken, "/rest/auth/refreshtoken");
+        return generateCookie(jwtRefreshCookie, refreshToken, "/ecd/auth/refreshtoken");
     }
 
     public String getJwtFromCookies(HttpServletRequest request) {
@@ -71,7 +71,7 @@ public class AccessTokenFacade implements TokenFacade {
 
     public ResponseCookie getCleanJwtRefreshCookie() {
         ResponseCookie cookie = ResponseCookie.from(jwtRefreshCookie, null)
-                .path("/rest/auth/refreshtoken")
+                .path("/ecd/auth/refreshtoken")
                 .build();
         return cookie;
     }

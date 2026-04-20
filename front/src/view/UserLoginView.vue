@@ -9,8 +9,8 @@
       >
         <v-col class="d-flex flex-column align-center justify-center text-center" cols="4">
           <v-sheet class="align-center justify-center bg-transparent">
-            <div class="text-h4 font-weight-bold mt-3">РГИС</div>
-            <div class="text-body-1 text-medium-emphasis">Геоинформационная система</div>
+            <div class="text-h4 font-weight-bold mt-3">ТВОЙ ДНЕВНИК</div>
+            <div class="text-body-1 text-medium-emphasis">Электронный дневник</div>
           </v-sheet>
         </v-col>
 
@@ -114,7 +114,7 @@ const login = async () => {
     await store.login(loginForm.value.username, loginForm.value.password);
 
     const redirectTo =
-      typeof route.query.redirect === "string" ? route.query.redirect : { name: "map" };
+      typeof route.query.redirect === "string" ? route.query.redirect : { name: "admin" };
     await router.push(redirectTo);
   } catch (err) {
     if (isAxiosError(err)) {

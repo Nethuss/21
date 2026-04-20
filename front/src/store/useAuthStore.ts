@@ -46,7 +46,6 @@ export const useAuthStore = defineStore(
     const firstname = ref<string>("");
     const lastname = ref<string>("");
     const middlename = ref<string>("");
-    const locationIds = ref<number[]>([]);
 
     /**
      * Выполняет выход пользователя, очищая аутентификационные данных пользователя
@@ -77,7 +76,6 @@ export const useAuthStore = defineStore(
           firstname.value = response.data.firstname;
           lastname.value = response.data.lastname;
           middlename.value = response.data.middlename;
-          locationIds.value = response.data.locationIds;
         return true;
       } catch (error) {
         console.error("Login error: ", error);
