@@ -30,5 +30,12 @@ import "@/sass/variables.scss";
 const pinia = createPinia();
 pinia.use(piniaPersist);
 
+import { useAuthStore } from "@/store/useAuthStore";
+
 const app = createApp(App).use(pinia).use(vuetify);
-app.use(router).mount("#app");
+
+useAuthStore()
+    .loadUser()
+    .then(() => {
+        app.use(router).mount("#app");
+    });

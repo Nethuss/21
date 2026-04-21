@@ -16,15 +16,17 @@ const roleColors: Record<UserRole, string> = {
 };
 
 export function getUserRoleColor(role: UserRole | undefined): string {
+    console.log(role)
     if (!role) return 'red';
     return roleColors[role] || "gray";
 }
 
 export function getRuRole(role: UserRole): string {
+    console.log(role)
     switch (role) {
         case UserRole.ADMIN: return "АДМИН";
-        case UserRole.SUPERUSER: return "СУПЕРПОЛЬЗОВАТЕЛЬ";
-        case UserRole.USER: return "ПОЛЬЗОВАТЕЛЬ";
+        case UserRole.SUPERUSER: return "УЧИТЕЛЬ";
+        case UserRole.USER: return "УЧЕНИК";
         default: return "";
     }
 }

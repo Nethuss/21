@@ -65,7 +65,7 @@ public class AccessTokenFacade implements TokenFacade {
 
     public ResponseCookie getCleanJwtCookie() {
         ResponseCookie cookie =
-                ResponseCookie.from(jwtCookie, null).path("/rest").build();
+                ResponseCookie.from(jwtCookie, null).path("/ecd").build();
         return cookie;
     }
 

@@ -6,6 +6,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.didcvee.ecd.user.dto.CreateUserRequest;
+import ru.didcvee.ecd.user.dto.SubjectDto;
 import ru.didcvee.ecd.user.dto.UpdateUserRequest;
 import ru.didcvee.ecd.user.dto.UserDto;
 
@@ -29,6 +30,7 @@ public class AdminUserService {
             u.setMiddlename(rs.getString("middlename"));
             u.setLastname(rs.getString("lastname"));
             u.setIsActive(rs.getBoolean("is_active"));
+            u.setGroupId(rs.getObject("group_id") != null ? rs.getLong("group_id") : null);
 
             var roles = jdbc.query("""
                 SELECT r.name FROM role r
@@ -37,6 +39,19 @@ public class AdminUserService {
             """, (r, j) -> r.getString("name"), u.getId());
 
             u.setRoles(roles);
+
+            var subjects = jdbc.query("""
+    SELECT s.id, s.name FROM subjects s
+    JOIN teacher_subjects ts ON s.id = ts.subject_id
+    WHERE ts.teacher_id = ?
+""", (r, j) -> {
+                SubjectDto s = new SubjectDto();
+                s.setId(r.getLong("id"));
+                s.setName(r.getString("name"));
+                return s;
+            }, u.getId());
+
+            u.setSubjects(subjects);
             return u;
         });
     }
@@ -46,14 +61,15 @@ public class AdminUserService {
         String hashed = encoder.encode(req.getPassword());
 
         jdbc.update("""
-            INSERT INTO users(username, password, firstname, middlename, lastname, is_active)
-            VALUES (?, ?, ?, ?, ?, true)
+            INSERT INTO users(username, password, firstname, middlename, lastname, is_active, group_id)
+            VALUES (?, ?, ?, ?, ?, true, ?)
         """,
                 req.getUsername(),
                 hashed,
                 req.getFirstname(),
                 req.getMiddlename(),
-                req.getLastname()
+                req.getLastname(),
+                req.getGroupId()
         );
 
         Long userId = jdbc.queryForObject(
@@ -70,6 +86,15 @@ public class AdminUserService {
                 """, userId, role);
             }
         }
+
+        if (req.getSubjectIds() != null) {
+            for (Long subjectId : req.getSubjectIds()) {
+                jdbc.update("""
+            INSERT INTO teacher_subjects(teacher_id, subject_id)
+            VALUES (?, ?)
+        """, userId, subjectId);
+            }
+        }
     }
 
     // 📌 UPDATE
@@ -82,13 +107,14 @@ public class AdminUserService {
 
         jdbc.update("""
             UPDATE users
-            SET firstname = ?, middlename = ?, lastname = ?, is_active = ?
+            SET firstname = ?, middlename = ?, lastname = ?, is_active = ?, group_id = ?
             WHERE id = ?
         """,
                 req.getFirstname(),
                 req.getMiddlename(),
                 req.getLastname(),
                 req.getIsActive(),
+                req.getGroupId(),
                 id
         );
 
@@ -101,6 +127,17 @@ public class AdminUserService {
                     INSERT INTO user_roles(user_id, role_id)
                     SELECT ?, id FROM role WHERE name = ?
                 """, id, role);
+            }
+        }
+
+        jdbc.update("DELETE FROM teacher_subjects WHERE teacher_id = ?", id);
+
+        if (req.getSubjectIds() != null) {
+            for (Long subjectId : req.getSubjectIds()) {
+                jdbc.update("""
+            INSERT INTO teacher_subjects(teacher_id, subject_id)
+            VALUES (?, ?)
+        """, id, subjectId);
             }
         }
     }
@@ -122,6 +159,7 @@ public class AdminUserService {
             u.setMiddlename(rs.getString("middlename"));
             u.setLastname(rs.getString("lastname"));
             u.setIsActive(rs.getBoolean("is_active"));
+            u.setGroupId(rs.getObject("group_id") != null ? rs.getLong("group_id") : null);
 
             var roles = jdbc.query("""
                 SELECT r.name FROM role r
@@ -130,6 +168,19 @@ public class AdminUserService {
             """, (r, j) -> r.getString("name"), id);
 
             u.setRoles(roles);
+
+            var subjects = jdbc.query("""
+                SELECT s.id, s.name FROM subjects s
+                JOIN teacher_subjects ts ON s.id = ts.subject_id
+                WHERE ts.teacher_id = ?
+            """, (r, j) -> {
+                SubjectDto s = new SubjectDto();
+                s.setId(r.getLong("id"));
+                s.setName(r.getString("name"));
+                return s;
+            }, id);
+
+            u.setSubjects(subjects);
             return u;
         }, id);
     }

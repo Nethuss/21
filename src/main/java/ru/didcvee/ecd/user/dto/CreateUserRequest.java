@@ -12,4 +12,6 @@ public class CreateUserRequest {
     private String middlename;
     private String lastname;
     private List<String> roles;
+    private List<Long> subjectIds;
+    private Long groupId;
 }

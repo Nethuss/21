@@ -41,8 +41,8 @@ export const useAuthStore = defineStore(
     })
 
     const username = ref<string>("");
-    const ruRole = computed(() => getRuRole(authedUser.value.roles[0]?.name))
-    const role = computed(() => authedUser.value.roles[0]?.name);
+      const role = computed(() => authedUser.value.roles[0]);
+      const ruRole = computed(() => getRuRole(role.value));
     const firstname = ref<string>("");
     const lastname = ref<string>("");
     const middlename = ref<string>("");

@@ -20,7 +20,7 @@
           <v-sheet class="bg-transparent">
             <v-card-title class="d-flex align-center justify-center mb-2 text-center flex-wrap">
               <span class="text-h5 font-weight-bold">Доступ к системе</span>
-              <v-icon class="ml-2" color="primary" :icon="mdiShieldKey" />
+              <v-icon class="ml-2" color="primary" :icon="mdiAccountSchool" />
             </v-card-title>
 
             <v-card-text>
@@ -84,7 +84,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useSnackbarService } from "@/ui/snackbar/SnackbarService";
 import ShapeBackground from "@/ui/ShapeBackground.vue";
-import { mdiEmailOutline, mdiEye, mdiEyeOff, mdiLockOutline, mdiShieldKey } from "@mdi/js";
+import {mdiAccountSchool, mdiEmailOutline, mdiEye, mdiEyeOff, mdiLockOutline, mdiShieldKey} from "@mdi/js";
 import { Rules } from "@/model/Rules";
 import { isAxiosError } from "axios";
 import { useTheme } from "vuetify/framework";
@@ -114,7 +114,7 @@ const login = async () => {
     await store.login(loginForm.value.username, loginForm.value.password);
 
     const redirectTo =
-      typeof route.query.redirect === "string" ? route.query.redirect : { name: "admin" };
+      typeof route.query.redirect === "string" ? route.query.redirect : { name: "groups" };
     await router.push(redirectTo);
   } catch (err) {
     if (isAxiosError(err)) {

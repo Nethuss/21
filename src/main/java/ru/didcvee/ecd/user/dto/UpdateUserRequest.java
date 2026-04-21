@@ -12,4 +12,6 @@ public class UpdateUserRequest {
     private String lastname;
     private Boolean isActive;
     private List<String> roles;
+    private List<Long> subjectIds;
+    private Long groupId;
 }

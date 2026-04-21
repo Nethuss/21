@@ -13,4 +13,7 @@ public class UserDto {
     private String lastname;
     private Boolean isActive;
     private List<String> roles;
+    private List<Long> subjectIds;
+    private List<SubjectDto> subjects;
+    private Long groupId;
 }
