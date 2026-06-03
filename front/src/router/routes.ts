@@ -27,6 +27,16 @@ export const routes: Array<RouteRecordRaw> = [
         name: "Расписание",
         component: () => import("@/view/ScheduleView.vue"),
     },
+        {
+            path: "teacher",
+            name: "teacher",
+            component: () => import("@/view/TeacherJournalView.vue"),
+        },
+        {
+            path: "student",
+            name: "student",
+            component: () => import("@/view/StudentView.vue"),
+        },
 ],
     },
     routesLogin,

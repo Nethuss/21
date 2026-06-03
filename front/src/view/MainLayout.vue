@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import {computed, ref, watch} from "vue";
-import {useRoute} from "vue-router";
-import {useTheme} from "vuetify";
-import {useAuthStore} from "@/store/useAuthStore";
+import { computed, onMounted, ref, watch } from "vue";
+import { useRoute } from "vue-router";
+import { useTheme } from "vuetify";
+
 import router from "@/router";
-import {getUserRoleColor} from "@/enum/UserRole";
+import { useAuthStore } from "@/store/useAuthStore";
+import { getUserRoleColor } from "@/enum/UserRole";
 
 import {
-  mdiAccount,
   mdiAccountGroupOutline,
   mdiAccountMultipleOutline,
   mdiAccountSchool,
@@ -22,143 +22,273 @@ const authStore = useAuthStore();
 const theme = useTheme();
 
 /* ---------------- THEME ---------------- */
-const isDark = ref(localStorage.getItem("appTheme") === "mainThemeDark");
+
+const isDark = ref(
+    localStorage.getItem("appTheme") === "mainThemeDark"
+);
 
 watch(isDark, (val) => {
-  const themeName = val ? "mainThemeDark" : "mainThemeLight";
+  const themeName = val
+      ? "mainThemeDark"
+      : "mainThemeLight";
+
   theme.change(themeName);
   localStorage.setItem("appTheme", themeName);
 });
 
 /* ---------------- USER ---------------- */
+
 const fullName = computed(() => {
-  const { lastname, firstname, middlename } = authStore.authedUser ?? {};
-  return [lastname, firstname, middlename].filter(Boolean).join(" ");
+  const { lastname, firstname, middlename } =
+  authStore.authedUser ?? {};
+
+  return [lastname, firstname, middlename]
+      .filter(Boolean)
+      .join(" ");
 });
 
+const initials = computed(() => {
+  const user = authStore.authedUser;
+
+  if (!user) return "?";
+
+  return (
+      user.firstname?.[0] ||
+      user.username?.[0] ||
+      "?"
+  ).toUpperCase();
+});
+
+/* ---------------- MENU ---------------- */
+
+const menu = computed(() => {
+  const role = authStore.role;
+
+  switch (role) {
+    case "ROLE_ADMIN":
+      return [
+        {
+          title: "Группы",
+          icon: mdiAccountGroupOutline,
+          to: "/groups",
+        },
+        {
+          title: "Предметы",
+          icon: mdiBookOpenPageVariantOutline,
+          to: "/subjects",
+        },
+        {
+          title: "Пользователи",
+          icon: mdiAccountMultipleOutline,
+          to: "/users",
+        },
+        {
+          title: "Расписание",
+          icon: mdiCalendarMonthOutline,
+          to: "/schedule",
+        },
+      ];
+
+    case "ROLE_SUPERUSER":
+      return [
+        {
+          title: "Журнал",
+          icon: mdiCalendarMonthOutline,
+          to: "/teacher",
+        },
+      ];
+
+    default:
+      return [
+        {
+          title: "Ученик",
+          icon: mdiCalendarMonthOutline,
+          to: "/student",
+        },
+      ];
+  }
+});
+
+/* ---------------- DEFAULT ROUTE ---------------- */
+
+const getDefaultRoute = () => {
+  switch (authStore.role) {
+    case "ROLE_ADMIN":
+      return "/groups";
+
+    case "ROLE_SUPERUSER":
+      return "/teacher";
+
+    default:
+      return "/student";
+  }
+};
+
+const redirectFromRoot = async () => {
+  if (route.path === "/") {
+    await router.replace(getDefaultRoute());
+  }
+};
+
+onMounted(() => {
+  redirectFromRoot();
+});
+
+watch(
+    () => authStore.role,
+    () => {
+      redirectFromRoot();
+    },
+    { immediate: true }
+);
+
+/* ---------------- LOGOUT ---------------- */
+
 const logout = async () => {
-  await router.push("/login");
   await authStore.logout();
+  await router.replace("/login");
 };
 
 /* ---------------- SIDEBAR ---------------- */
+
 const drawer = ref(true);
-const rail = ref(false);
 
-const menu = [
-  { title: "Группы", icon: mdiAccountGroupOutline, to: "/groups" },
-  { title: "Предметы", icon: mdiBookOpenPageVariantOutline, to: "/subjects" },
-  { title: "Пользователи", icon: mdiAccountMultipleOutline, to: "/users" },
-  { title: "Расписание", icon: mdiCalendarMonthOutline, to: "/schedule" },
-];
+const navigate = async (path: string) => {
+  if (route.path === path) return;
 
-const toggleSidebar = () => {
+  await router.push(path);
+
   if (window.innerWidth < 960) {
-    drawer.value = !drawer.value;
-  } else {
-    rail.value = !rail.value;
+    drawer.value = false;
   }
 };
 </script>
-
 <template>
   <v-app>
 
-    <!-- SIDEBAR -->
     <v-navigation-drawer
         v-model="drawer"
-        :rail="rail"
-        permanent
+        :permanent="$vuetify.display.mdAndUp"
+        :temporary="$vuetify.display.smAndDown"
+        width="260"
         class="sidebar"
-        elevation="0"
     >
-      <!-- LOGO -->
       <div class="logo">
-        <v-icon :icon="mdiAccountSchool" size="20" />
-        <span class="logo-text" :class="{ collapsed: rail }">
+        <v-icon :icon="mdiAccountSchool" size="22" />
+
+        <span
+            class="logo-text"
+        >
           Дневник
         </span>
       </div>
 
       <v-divider />
 
-      <v-list nav density="comfortable">
+      <!-- USER -->
 
-        <!-- USER ITEM -->
+      <v-list nav density="comfortable">
         <v-list-item
             class="menu-item pa-2"
             rounded="lg"
         >
           <template #prepend>
 
-              <v-icon :icon="mdiAccount"></v-icon>
+            <v-avatar
+                size="42"
+                :color="getUserRoleColor(authStore.role)"
+            >
+              <span class="text-white">
+                {{ initials }}
+              </span>
+            </v-avatar>
 
           </template>
 
           <v-list-item-title class="user-name">
-            {{ fullName || authStore.authedUser.username }}
+            {{ fullName || authStore.authedUser?.username }}
           </v-list-item-title>
 
           <v-list-item-subtitle class="user-login">
-            {{ authStore.authedUser.username }}
+            {{ authStore.authedUser?.username }}
           </v-list-item-subtitle>
 
           <v-chip
-              size="x-small"
-              :color="getUserRoleColor(authStore.role)"
+              size="small"
+              class="mt-2"
               variant="flat"
+              :color="getUserRoleColor(authStore.role)"
           >
             {{ authStore.ruRole }}
           </v-chip>
-
-
         </v-list-item>
-
       </v-list>
-
 
       <v-divider />
 
       <!-- MENU -->
-      <v-list nav density="comfortable" class="mt-2">
+
+      <v-list
+          nav
+          density="comfortable"
+          class="mt-2"
+      >
         <v-list-item
             v-for="item in menu"
             :key="item.to"
-            :to="item.to"
             rounded="lg"
             class="menu-item"
-            :class="{ active: route.path === item.to }"
+            :class="{
+              active: route.path.startsWith(item.to)
+            }"
+            @click="navigate(item.to)"
         >
           <template #prepend>
             <v-icon :icon="item.icon" />
           </template>
 
-          <span class="menu-label" :class="{ collapsed: rail }">
+          <span
+              class="menu-label"
+          >
             {{ item.title }}
           </span>
         </v-list-item>
       </v-list>
 
       <!-- LOGOUT -->
+
       <div class="logout">
         <v-btn
-            v-if="!rail"
-            size="small"
             block
-            variant="tonal"
-            :icon="mdiLogout"
-            @click="logout"
-            rounded="lg"
             color="error"
+            variant="tonal"
+            rounded="lg"
+            @click="logout"
         >
-          <span v-if="!rail">Выйти</span>
+          <v-icon
+              start
+              :icon="mdiLogout"
+          />
+
+          <span>
+            Выйти
+          </span>
         </v-btn>
       </div>
+
     </v-navigation-drawer>
 
-    <!-- TOP BAR -->
-    <v-app-bar elevation="0" class="app-bar">
-      <v-btn :icon="mdiMenu" variant="text" @click="toggleSidebar" />
+    <!-- TOPBAR -->
+
+    <v-app-bar
+        elevation="0"
+        class="app-bar"
+    >
+      <v-btn
+          :icon="mdiMenu"
+          variant="text"
+          @click="drawer = !drawer"
+      />
 
       <div class="page-title">
         {{ route.name || "Панель" }}
@@ -166,15 +296,18 @@ const toggleSidebar = () => {
 
       <v-spacer />
 
-      <!-- THEME SWITCH -->
-
-      <v-switch class="align-center justify-center d-flex mr-3" inset v-model="isDark"></v-switch>
-
+      <v-switch
+          v-model="isDark"
+          inset
+          hide-details
+          class="mr-3"
+      />
     </v-app-bar>
 
     <!-- CONTENT -->
+
     <v-main class="main">
-      <v-container fluid class="pa-8">
+      <v-container fluid class="pa-6">
         <router-view />
       </v-container>
     </v-main>
@@ -183,41 +316,23 @@ const toggleSidebar = () => {
 </template>
 
 <style scoped>
-/* SIDEBAR */
 .sidebar {
-  border-right: 1px solid rgba(0, 0, 0, 0.06);
-  display: flex;
-  flex-direction: column;
+  border-right: 1px solid rgba(var(--v-theme-on-surface), 0.08);
+  background: rgb(var(--v-theme-surface));
 }
 
-/* LOGO */
 .logo {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 16px;
-  font-weight: 600;
+  padding: 18px;
+  font-size: 18px;
+  font-weight: 700;
 }
 
-.logo-text.collapsed {
-  opacity: 0;
-  width: 0;
-  overflow: hidden;
+.logo-text {
+  transition: 0.2s;
 }
-
-/* USER */
-.user-block {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 16px;
-}
-
-.user-info {
-  display: flex;
-  flex-direction: column;
-}
-
 .user-name {
   font-size: 14px;
   font-weight: 600;
@@ -225,12 +340,16 @@ const toggleSidebar = () => {
 
 .user-login {
   font-size: 12px;
-  color: rgba(0,0,0,0.6);
+  opacity: 0.7;
 }
 
-/* MENU */
+.menu-item {
+  margin: 4px 8px;
+  transition: all .15s ease;
+}
+
 .menu-item:hover {
-  background: rgba(0, 0, 0, 0.04);
+  background: rgba(var(--v-theme-on-surface), 0.05);
 }
 
 .menu-item.active {
@@ -238,34 +357,28 @@ const toggleSidebar = () => {
   color: rgb(var(--v-theme-primary));
 }
 
-.menu-label.collapsed {
-  opacity: 0;
-  width: 0;
-  overflow: hidden;
+.menu-label {
+  transition: .2s;
 }
 
-/* LOGOUT */
 .logout {
   margin-top: auto;
   padding: 12px;
 }
 
-/* TOP BAR */
 .app-bar {
   backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.7);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(var(--v-theme-surface), 0.9);
+  border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.08);
 }
 
-/* TITLE */
 .page-title {
   font-size: 18px;
   font-weight: 600;
   margin-left: 8px;
 }
 
-/* MAIN */
 .main {
-  background: #f7f8fa;
+  background: rgb(var(--v-theme-background));
 }
 </style>
